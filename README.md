@@ -1,159 +1,83 @@
-# 🚗 Car Price Prediction System
+# AutoLux — Car Price Prediction
 
-A machine learning web application that predicts the estimated price of a car based on its features. The application uses **Streamlit** for the interactive frontend and **FastAPI** for the prediction API.
+A used-vehicle price estimation project using a trained Random Forest model, a FastAPI backend, and a Streamlit frontend.
 
-## ✨ Features
+## Project files
 
-- **Car Price Prediction:** Predict the estimated price based on input features.
-- **Interactive Frontend:** User-friendly interface built with Streamlit.
-- **FastAPI Backend:** Handles prediction requests through a REST API.
-- **Input Validation:** Sends car details to the backend for processing.
-- **Error Handling:** Displays useful messages for connection and prediction errors.
-- **Responsive Design:** Clean and modern interface for an improved user experience.
+- `app.py` — Streamlit user interface
+- `main.py` — FastAPI backend with `/`, `/health`, and `/predict` endpoints
+- `model.py` — loads the saved model and aligns input features
+- `schema.py` — validates prediction request and response data
+- `random_forest_model.pkl` — trained model artifact
+- `feature_columns.pkl` — feature order used during training
+- `cardekho_data (1).csv` — training dataset
+- `train.py` — optional script to retrain the model
 
-## 🛠️ Technologies Used
+## Run locally
 
-- Python
-- Streamlit
-- FastAPI
-- Uvicorn
-- Machine Learning
-- Pandas and NumPy (if used in your model)
+Use Python 3.12 and run these commands from the repository root.
 
-## 📁 Project Structure
+1. Create and activate a virtual environment.
+2. Install dependencies:
 
-```text
-Car-Price-Prediction/
-│
-├── app.py              # Streamlit frontend
-├── main.py             # FastAPI backend
-├── model.pkl           # Trained ML model (if applicable)
-├── requirements.txt    # Project dependencies
-└── README.md           # Project documentation
-```
+   ```bash
+   python -m pip install -r requirements.txt
+   ```
 
-*Note: Your actual filenames may differ. Keep the file names consistent with your project.*
+3. Start the API in terminal 1:
 
-## ⚙️ Installation
+   ```bash
+   uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+   ```
 
-### 1. Clone the Repository
+   API docs: http://127.0.0.1:8000/docs
 
-```bash
-git clone <your-repository-url>
-cd Car-Price-Prediction
-```
+4. Start Streamlit in terminal 2:
 
-### 2. Create a Virtual Environment (Optional)
+   ```bash
+   streamlit run app.py
+   ```
 
-```bash
-python -m venv venv
-```
+   The local frontend defaults to http://127.0.0.1:8000/predict.
 
-Activate it on Windows:
+## Deploy on Render
 
-```bash
-venv\Scripts\activate
-```
+Deploy **two Web Services** from this same GitHub repository, both on branch `main`, with the repository root as the Root Directory.
 
-### 3. Install Dependencies
+### Backend service
 
-```bash
-pip install -r requirements.txt
-```
+- Runtime: Python
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
 
-If you do not have a `requirements.txt` file, install the main packages:
+After deployment, check `/health` and `/docs` on the backend URL.
 
-```bash
-pip install streamlit fastapi uvicorn
-```
+### Frontend service
 
-Install any additional packages required by your machine learning model.
+- Runtime: Python
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `streamlit run app.py --server.address 0.0.0.0 --server.port $PORT`
+- Environment Variable: `CAR_PRICE_API_URL=https://YOUR-BACKEND-SERVICE.onrender.com/predict`
 
-## 🚀 How to Run the Project
+Replace the example API URL with the actual HTTPS URL of your backend service. Do not use `127.0.0.1` for the backend URL in a separate Render service.
 
-The backend and frontend must run in **two separate terminals**.
+## Model notes
 
-### Terminal 1: Start the FastAPI Backend
+The model predicts the selling price in lakhs, based on the dataset's target column. The saved model and feature-column artifact must come from the same training run. Do not retrain in production unless you intend to replace both artifacts together.
+
+To retrain locally:
 
 ```bash
-python -m uvicorn main:app --host 127.0.0.1 --port 8001 --reload
+python train.py
 ```
 
-Backend API:
+The script writes the updated model artifacts to the repository root. Review and commit both artifacts together before deploying.
 
-`http://127.0.0.1:8001`
+## Troubleshooting
 
-API documentation:
+- **Backend startup failure:** confirm Render uses `uvicorn main:app --host 0.0.0.0 --port $PORT`.
+- **Frontend cannot connect:** verify `CAR_PRICE_API_URL` points to the backend's public HTTPS `/predict` endpoint.
+- **Missing model:** confirm `random_forest_model.pkl` and `feature_columns.pkl` are in the repository root.
+- **Validation error:** inspect the JSON response from the API and make sure field names and category values match `schema.py`.
 
-`http://127.0.0.1:8001/docs`
-
-### Terminal 2: Start the Streamlit Frontend
-
-```bash
-streamlit run app.py
-```
-
-Open the local URL displayed in your terminal, usually:
-
-`http://localhost:8501`
-
-### API Configuration
-
-The frontend should send prediction requests to:
-
-```text
-http://127.0.0.1:8001/predict
-```
-
-Make sure the backend is running before clicking the prediction button.
-
-## 📊 How to Use
-
-1. Start the FastAPI backend.
-2. Start the Streamlit frontend.
-3. Open the application in your browser.
-4. Enter the required car details.
-5. Click the **Predict Price** button.
-6. View the predicted car price displayed by the application.
-
-## 🐛 Troubleshooting
-
-**Problem: Connection refused**
-
-- Ensure the FastAPI backend is running on port `8001`.
-- Check that the API URL in the Streamlit frontend is correct.
-
-**Problem: 404 Not Found**
-
-- Open `http://127.0.0.1:8001/docs`.
-- Verify that the `/predict` endpoint exists.
-- Confirm that the frontend uses the correct endpoint and HTTP method.
-
-**Problem: Prediction button does not work**
-
-- Check the terminal running Streamlit for error messages.
-- Check the FastAPI terminal for request errors.
-- Verify that the input fields match the backend's expected data format.
-
-**Problem: Model file not found**
-
-- Ensure the trained model file exists.
-- Verify the model path in the backend code.
-
-## 🔮 Future Improvements
-
-- Add more car features for improved predictions.
-- Improve model accuracy through hyperparameter tuning.
-- Display prediction confidence or estimated price ranges.
-- Deploy the frontend and backend online.
-- Add visual analytics and historical price comparisons.
-
-## 👨‍💻 Author
-
-**Het Vaghasiya**
-
-Car Price Prediction — Machine Learning Web Application.
-
-## 📄 License
-
-This project is intended for educational and learning purposes. Add a suitable open-source license if you plan to distribute it publicly.
+Predictions are estimates, not guaranteed resale offers.
