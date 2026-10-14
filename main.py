@@ -38,7 +38,14 @@ def health():
 @app.post("/predict", response_model=PredictionResponse)
 def predict(features: CarFeatures):
     try:
-        price = predict_price(features.dict())
+        # Pydantic parses these categorical fields as Enum members. Convert them
+        # back to the exact string labels used in the training CSV before encoding.
+        payload = features.dict()
+        for key, value in payload.items():
+            if hasattr(value, "value"):
+                payload[key] = value.value
+
+        price = predict_price(payload)
         return PredictionResponse(prediction_price=price)
     except FileNotFoundError as exc:
         raise HTTPException(
